@@ -1,52 +1,76 @@
-# Estadistica II, Primavera de 2024
-# Primeros Códigos. Ejemplo Lanzamiento de una moneda
+---
+title: "Moneda"
+author: "Benjamín Oliva"
+date: "2025-02-20"
+output: html_document
+---
 
-#****************************************************************************************
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
 #install.packages("dplyr")
 #install.packages("ggplot2")
 
 #
 library(dplyr)
 library(ggplot2)
+```
 
-#****************************************************************************************
-getwd()
+# Simulación del Lanzamiento de una Moneda
 
-setwd("")
+## Supuestos:
+Supongamos un proceso estocastico U_t, el cual es puramente aleatorio, en los siguientes terminos:
+i)   $\mathbb{E}[U_t] = mu = 0$
 
-getwd()
+ii)  $Var[U_t] = \mathbb{E}[(U_t - mu)^2] = \mathbb{E}[(U_t)^2] = sigma^2$
 
-#****************************************************************************************
-# Supongamos un proceso estocastico U_t, el cual es puramente aleatorio, en los siguientes
-# terminos:
-# i)   E[U_t] = mu = 0 
-# ii)  Var[U_t] = E[(U_t - mu)^2] = E[(U_t)^2] = sigma^2
-# ii)  Cov[U_t,U_s] = E[(U_t - mu)(U_s - mu)] = E[U_t U_s] = 0, para todo t distinto de s
+ii)  $Cov[U_t,U_s] = \mathbb{E}[(U_t - mu)(U_s - mu)] = \mathbb{E}[U_t U_s] = 0$, para todo t distinto de s
 
-#****************************************************************************************
-# A. Utilizaremos una funcion de numeros aleatorios: 
-#-> rnorm
+## Algunos códigos base
+Utilizaremos una funcion de numeros aleatorios: 
+
+```{r}
+#
 
 args(rnorm)
 
-# Supongamos E[U_t] = 0 y Var[U_t] = 4
+```
+Supongamos $\mathbb{E}[U_t] = 0$ y $Var[U_t] = 4$
 
+```{r}
 rnorm(10, mean = 0, sd = 2)
+```
 
-# Importante (para Simulaciones que sean replicables):
+Importante (para Simulaciones que sean replicables):
+
+```{r}
 #set.seed(10101) # Es una constate (la semilla) que fija la serie de numeros aleatorios
 Z_t <- rnorm(1000, mean = 0, sd = 2)
+Z_t[1:6]
+```
+
+
+```{r}
 
 mean(Z_t)
 
 sd(Z_t)
 
+```
+
+
+```{r}
+#
 hist(Z_t, 
      main = "Histograma del proceso Z_t, Normal(0, 2)", 
      xlab = "Z_t", 
      ylab = "Frecuencia")
 
+```
+
+```{r}
 # ¿Cómo guardar la gráfica?
+
 png("G_Z_t.jpg",  width = 900)
 
 hist(Z_t, 
@@ -55,17 +79,18 @@ hist(Z_t,
      ylab = "Frecuencia")
 
 dev.off()
+```
 
-#****************************************************************************************
-# B. Generamos una función que hace un proceso de cualquier dimensión, para el caso del
-# lanzamiento de una moneda y un proceso estocástico del tipo X_t = X_t-1 + U_t
-# Una Función tiene una estructura:
-# function( lista de argumentos -- pede ser vacio )
-#   {
-#   Calculos, prpcedimientos, etc.
-#   return( objeto de resultados ) -- puede ser opcional
-#   }
+## Generamos una función que hace un proceso de cualquier dimensión, para el caso del lanzamiento de una moneda y un proceso estocástico del tipo $X_t = X_t-1 + U_t$
 
+Una Función tiene una estructura:
+function( lista de argumentos -- pede ser vacio )
+   {
+   Calculos, prpcedimientos, etc.
+   return( objeto de resultados ) -- puede ser opcional
+   }
+
+```{r}
 # La siguiente funcion necesita DOS argumentos
 
 Moneda <- function(R, Time){
@@ -78,15 +103,20 @@ Moneda <- function(R, Time){
   # el espacio muestral, tomando muestras de tamaño 1
   return(U_t)
 }
+```
 
-#****************************************************************************************
-# Resutados: 
-# Inputs / argumentos de la funcion, para el caso de lanzar una moneda
+## Resutados: 
+
+```{r}
+#Inputs / argumentos de la funcion, para el caso de lanzar una moneda
 
 Resultados <- c(-1, 1)
 #
 Periodos <- 10000
 
+```
+
+```{r}
 # Creamos un data frame de nombre "U" con una columna llamada "Tiempo"
 U <- data.frame(Tiempo = c(1:Periodos))
 
@@ -95,6 +125,9 @@ U <- data.frame(Tiempo = c(1:Periodos))
 
 U$U_t <- Moneda( Resultados, Periodos )
 
+```
+
+```{r}
 #
 mu = mean(U$U_t)
 mu
@@ -103,21 +136,29 @@ mu
 S2 = var(U$U_t)
 S2
 
+```
+
+```{r}
 # Agregamos al data frame una columna SU_t que llenamos de ceros (0)
 U$SU_t <- replicate(Periodos, 0)
 
-View(U)
+#View(U)
+```
 
+
+```{r}
 # El siguiente ciclo recorre el data frame para ir acumulando los valores de U_t
 # y colocando el valor acumulado en SU_t
 for(i in 1:Periodos){
   U$SU_t[i] <- sum( U$U_t[1:i] )
 }
 
-View(U)
+#View(U)
+```
 
-# Graficamos los resultados:
+## Graficamos los resultados:
 
+```{r}
 # GRÁFICA
 ggplot(data = U, aes( x = Tiempo, y = SU_t) ) + 
   geom_line(linewidth = 0.5, color = "darkblue") +
@@ -141,39 +182,5 @@ ggplot(data = U, aes( x = Tiempo, y = SU_t) ) +
 ggsave("Lanzamiento_Moneda.png", width = 30, height = 15, units = "cm")
 
 #
+```
 
-#****************************************************************************************
-# C. Solucion a traves de una funcion
-
-# Utilizaremos una función guardada en un archivo a parte
-# Llamamos a la función:
-source("Caminata.R")
-
-# Definimos argumentos de la función
-Opciones <- c(-1, 1)
-#
-Soporte <- 10000
-
-# Vamos a réplicar el proceso con estos parámetros
-Rango <- 300
-#
-Caminos <- 10
-
-#
-
-for(i in 1:Caminos){
-  TT <- data.matrix(data.frame(Caminata(Opciones, Soporte)[1]))
-  #
-  G_t <- data.matrix(data.frame(Caminata(Opciones, Soporte)[2]))
-  #
-  plot(TT, G_t, col = "blue", type = "l", ylab = "Ganancias", xlab = "Tiempo", ylim = c(-Rango,Rango))
-  #
-  par(new = TRUE)
-  #
-  i <- i +1
-}
-#
-par(new = FALSE)
-
-#****************************************************************************************
-#
