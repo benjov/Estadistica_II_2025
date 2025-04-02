@@ -192,5 +192,5 @@ Replica este código para los archivos:
 
 3. enigh2022_ns_concentradohogar_csv.zip
 
-Entregable: el código implementado, Fecha de Entrega: 11 de abril de 2025
+Entregable: el código implementado, Fecha de Entrega: 21 de abril de 2025 por correo electrónico.
 
