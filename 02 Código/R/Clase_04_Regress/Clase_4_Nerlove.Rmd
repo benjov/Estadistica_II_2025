@@ -126,7 +126,6 @@ $$ln(C_i) = \beta_1 +  \beta_2 ln(Output_i) + \beta_3 ln(plabor_{i1}) + \beta_4 
 ### Metadatos: La base de datos contiene 145 observaciones  de las siguientes variables:
 **Datos de Demanda de Gasolina:**
 * **totcost:** costs in 1970, MM USD
-
 * **output:** output billion KwH
 * **plabor:** price of labor
 * **pfuel:** price of fuel
@@ -137,11 +136,15 @@ $$ln(C_i) = \beta_1 +  \beta_2 ln(Output_i) + \beta_3 ln(plabor_{i1}) + \beta_4 
 
 dataframe <- read.dta("nerlove63.dta")
 
+head(dataframe)
 ```
+
+```{r}
+names(dataframe)
+```
+
 ### Preview 
 ```{r, echo = FALSE}
-
-names(dataframe)
 
 dataframe %>% head()
 
@@ -153,6 +156,7 @@ dataframe %>% head()
 
 summary(dataframe)
 
+#dataframe %>% summary()
 ```
 
 ### Nuevas variables:
@@ -227,6 +231,8 @@ $$t = \frac{\beta_3 + \beta_4 + \beta_5 - 1}{\sqrt{\hat{\sigma}^2 \mathbf{R} (\m
 ```{r, echo = FALSE}
 
 fig <- plot_ly(data = dataframe, x = ~output, y = ~avgcost, 
+               type = 'scatter',
+               mode = 'markers',
                marker = list(size = 8, color = 'darkred'))
 
 fig <- fig %>% layout(title = 'Costo medio y producto')
@@ -237,6 +243,73 @@ fig
 
 
 # Regresión lineal
+
+## Paso a Paso
+```{r}
+# 1. Vector y (variable dependiente)
+y <- as.matrix(dataframe$Ltotcost)
+
+#y
+```
+
+```{r}
+# 2. Matriz X (incluye el intercepto y las variables independientes)
+X <- cbind(1, 
+           dataframe$Loutput, 
+           dataframe$Lplabor, 
+           dataframe$Lpfuel, 
+           dataframe$Lpkap)
+
+# Opcionalmente, puedes nombrar las columnas
+#colnames(X) <- c("Intercept", "Loutput", "Lplabor", "Lpfuel", "Lpkap")
+
+#X
+```
+
+```{r}
+# X'*X
+
+t(X) %*% X
+```
+
+```{r}
+# inv(X'*X)
+solve(t(X) %*% X)
+```
+
+```{r}
+# X'*Y
+
+t(X) %*% y
+```
+
+
+
+```{r}
+# 3. Estimación de coeficientes por fórmula matricial OLS:
+# beta_hat = (X'X)^(-1) X'y
+beta_hat <- solve(t(X) %*% X) %*% t(X) %*% y
+
+beta_hat
+```
+
+```{r}
+# Y predichos
+
+y_hat = X %*% beta_hat
+
+#y_hat
+```
+
+```{r}
+e = y - y_hat 
+
+Sigma2_hat = (t(e) %*% e) / (length(e) - 4)
+
+Sigma2_hat
+```
+
+## Forma Simple
 ```{r, echo = FALSE}
 
 #Create the linear regression
