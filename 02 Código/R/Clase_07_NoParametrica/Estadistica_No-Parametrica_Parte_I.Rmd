@@ -41,7 +41,10 @@ library(MASS)
 
 ### Importador de datos de Precios de Gasolinas en Estaciones de Servicio
 
-Los datos fueron tomados de: https://datos.gob.mx/busca/dataset/estaciones-de-servicio-gasolineras-y-precios-finales-de-gasolina-y-diesel
+Los datos fueron tomados de: 
+* Places: https://bit.ly/2V1Z3sm
+* Prices: https://bit.ly/2JNcTha
+* Serie de tiempo: https://www.cre.gob.mx/da/Precios_promedio_diarios_y_mensuales_en_estaciones_de_servicio.xlsx
 
 Nota al margen, tenemos una herramienta en desarrollo disponible en: https://analyticsboutique.github.io/Precios-en-EDS/
 
@@ -94,8 +97,8 @@ length(lng)
 Gasolinerias <- data.frame(ID = ID, name = name, cre_id = cre_id, lat = lat, lng = lng)
 
 # Muestra las primeras filas del dataframe
-head(Gasolinerias)
-
+#head(Gasolinerias)
+tail(Gasolinerias)
 ```
 
 ```{r}
@@ -143,7 +146,8 @@ print(length(gas_price))
 Precios <- data.frame(ID = ID, tipo = tipo, gas_price = gas_price)
 
 # Muestra las primeras filas del dataframe
-head(Precios)
+#head(Precios)
+tail(Precios)
 ```
 
 ```{r}
@@ -347,7 +351,7 @@ p <- ggplot(plot_data, aes(x = X)) +
 
 # Añadir diferentes anchos de banda
 for (bandwidth in c(0.1, 0.5, 1)) {
-  kde <- density(X, bw = bandwidth)
+  kde <- density(X, bw = bandwidth, kernel = "epanechnikov") # "gaussian", "epanechnikov", "rectangular"
   kde_data <- data.frame(x = kde$x, y = kde$y)
   p <- p + geom_line(data = kde_data, aes(x = x, y = y), color = 10*bandwidth) +
     annotate("text", x = max(grid), y = max(kde$y), label = paste('bw =', bandwidth), 
@@ -409,6 +413,34 @@ ks.test(Sample_1, Sample_2, alternative = 'two.sided')  # 'two.sided', 'less', '
 ```
 
 ```{r}
+#
+ks.test(Sample_1, Sample_2 + 0.001, alternative = 'two.sided')  # 'two.sided', 'less', 'greater'
+```
+
+```{r}
+# Crear un data frame combinando los dos arreglos
+# Calcular densidades
+densidad1 <- density(Sample_1, bw = 0.1, kernel = "gaussian" )
+densidad2 <- density(Sample_2, bw = 0.1, kernel = "gaussian")
+
+# Crear un data frame con los valores de densidad
+df_densidad <- data.frame(
+  x = c(densidad1$x, densidad2$x),
+  y = c(densidad1$y, densidad2$y),
+  grupo = rep(c("Sample 1", "Sample 2"), 
+              times = c(length(densidad1$x), length(densidad2$x)))
+)
+
+# Graficar con ggplot
+ggplot(df_densidad, aes(x = x, y = y, color = grupo, fill = grupo)) +
+  geom_line(linewidth = 1) +
+  geom_area(alpha = 0.3, position = "identity") +
+  labs(title = "Densidad de Kernel con density()", 
+       x = "Valor", y = "Densidad") +
+  theme_minimal()
+```
+
+```{r}
 # Seleccionamos 2 muestras con reemplazo pero para zonas del país
 
 # NOROESTE
@@ -444,29 +476,30 @@ ks.test(Sample_NO, Sample_PE, alternative = 'two.sided')  # 'two.sided', 'less',
 ```
 
 ```{r}
-# Datos
-Sample_NO <- data.frame( Sample_NO = Sample_NO )
-Sample_NO <- data.frame( X = density(Sample_NO$Sample_NO, bw = 0.1)$x,
-                         Y = density(Sample_NO$Sample_NO, bw = 0.1)$y )
+# Crear un data frame combinando los dos arreglos
+# Calcular densidades
+densidad1 <- density(Sample_NO, bw = 0.1, kernel = "gaussian" )
+densidad2 <- density(Sample_PE, bw = 0.1, kernel = "gaussian")
 
-Sample_PE <- data.frame( Sample_PE = Sample_PE )
-Sample_PE <- data.frame( X = density(Sample_PE$Sample_PE, bw = 0.1)$x,
-                         Y = density(Sample_PE$Sample_PE, bw = 0.1)$y )
+# Crear un data frame con los valores de densidad
+df_densidad <- data.frame(
+  x = c(densidad1$x, densidad2$x),
+  y = c(densidad1$y, densidad2$y),
+  grupo = rep(c("Sample NO", "Sample PE"), 
+              times = c(length(densidad1$x), length(densidad2$x)))
+)
 
-# Crear la gráfica base
-p <- ggplot( data = Sample_NO ) +
-     geom_line(aes(x = X, y = Y), color = "darkblue") +
-     annotate("text", x = max(grid), y = max(Sample_NO$Y), label = "NO", 
-             size = 3, color = "darkblue") +
-     geom_line( data = Sample_PE, aes(x = X, y = Y), color = "darkred") +
-     annotate("text", x = max(grid), y = max(Sample_PE$Y), label = "PE", 
-             size = 3, color = "darkred") +
-  labs(title = paste('Gráfica de densidad de gasolina tipo', Combustible),
-       x = 'Precio MXN',
-       y = 'Probability Density') +
-  theme_minimal(base_size = 15)
-
-p
-
+# Graficar con ggplot
+ggplot(df_densidad, aes(x = x, y = y, color = grupo, fill = grupo)) +
+  geom_line(linewidth = 1) +
+  geom_area(alpha = 0.3, position = "identity") +
+  labs(title = "Densidad de Kernel con density()", 
+       x = "Valor", y = "Densidad") +
+  theme_minimal()
 ```
 
+
+```{r}
+#
+ks.test(Sample_NO, Sample_PE - 0.1, alternative = 'two.sided')  # 'two.sided', 'less', 'greater'
+```
